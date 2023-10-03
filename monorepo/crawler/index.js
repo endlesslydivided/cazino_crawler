@@ -1,24 +1,24 @@
 const axios = require("axios"); 
 const cheerio = require("cheerio"); 
+const fs = require("fs"); 
+const path = require("path"); 
 
 const urlToVisit = 'https://casino.verajohn.com';
 const hrefToVisit = '/en/all-games';
 
 const allGamesUrl = urlToVisit + hrefToVisit;
 
-function getBaseUrl() {
-    return (window.location.hostname === "localhost") ? '' : '/fragment/gamefilter';
-}
 
-async function nextGamesPage(buttonElement, path, max, size,count,token) {
+async function nextGamesPage(path, max,size,count,token) {
 
-	const response = await fetch(`${getBaseUrl()}/ajax/${path}&size=${size}&offset=${count}`, {
-		headers: { Authorization: `Bearer ${meta.content}` }
+	const baseUrl = '/fragment/gamefilter';
+	const response = await fetch(`${urlToVisit}${baseUrl}/ajax/${path}&size=${size}&offset=${count}`, {
+		headers: { Authorization: `Bearer ${token}` }
 	});
 
 	if (response.ok) {
-		if (response.status === 204) {
-			buttonElement.classList.add("gff-game-pagination-button--hidden");
+		if (response.status === 204 || (max > 0 && count >= max)) {
+			return null;
 		}
 	}
 
@@ -44,20 +44,12 @@ async function main() {
 		} 
 	}); 
 
-	for(let i = 0;i < categoriesPagesToVisit.length - 1; i++)
-	{
+	for(let i = 0;i < categoriesPagesToVisit.length - 1; i++){
 		const slug = categoriesPagesToVisit[i];
 		const categoryPageHTML = await axios.get(urlToVisit + slug); 
 		const category$ = cheerio.load(categoryPageHTML.data); 
 
 		const categoryName = category$(".gff-game-grid__title").text();
-
-		const paginationClickValue = category$('.gff-game-pagination-button').attr('onclick');
-
-		if(paginationClickValue)
-		{
-			const loadMoreParams = paginationClickValue.match(/^(\(|\,)\s?\w+$/);
-		}
 
 		const games = [];
 
@@ -70,9 +62,35 @@ async function main() {
 				iconURL,
 				name
 			})
-		}); 
+		});
 
+		const paginationClickValue = category$('.gff-game-pagination-button').attr('onclick');
 
+		if(paginationClickValue){
+
+			let extraGamesHTML = null;
+			do{
+				const loadMoreParamsString = paginationClickValue.match(/(\(|\,)\s?(\d|\w|\W)+/)[0];
+				const params = loadMoreParamsString.replace(/[()']|\s/g,'').split(',');
+
+				extraGamesHTML = await nextGamesPage(params[2],params[3],params[4],games.length,token);
+
+				if(extraGamesHTML){
+					const extraGames$ = cheerio.load(extraGamesHTML); 
+
+					extraGames$("game-tile").each((index, element) => { 
+		
+						const iconURL = extraGames$(element).attr("icon-url"); 
+						const name = extraGames$(element).attr('display-name');
+						
+						games.push({
+							iconURL,
+							name
+						})
+					});
+				}		
+			}while(extraGamesHTML)
+		}
 
 		retrievedData = [...retrievedData,{
 			categoryName,
@@ -89,13 +107,16 @@ async function main() {
  
 main() 
 	.then((result) => { 
-		console.log(JSON.stringify(result,0,null));
+
+		const jsonString = JSON.stringify(result,null,2);
+		console.log(jsonString);
+
+		fs.writeFileSync('../../casinoData.json',jsonString,() =>{})
+
 		process.exit(0); 
 	}) 
 	.catch((e) => { 
-		// logging the error message 
 		console.error(e); 
- 
-		// unsuccessful ending 
+
 		process.exit(1); 
 	});
