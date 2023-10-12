@@ -1,0 +1,51 @@
+version: '3.0'
+
+services:
+ casino_crawler_db:
+  build:
+   context: .
+   dockerfile: casino_crawler_db.dockerfile
+  container_name: casino_crawler_db
+  image: postgres:15.1-alpine
+  env_file:
+   - ./.env
+  environment:
+   PG_DATA: /var/lib/postgresql/data
+  ports:
+   - 5432:5432
+  volumes:
+   - pgdata:/var/lib/postgresql/data
+  restart: always
+############################################################################
+ casino_api:
+  container_name: casino_api
+  build:
+   context: ./packages/casino-api
+  env_file:
+   - ./.env
+  volumes:
+   - ./packages/casino-api:/packages/casino-api
+   - /packages/casino-api/node_modules
+  ports:
+   - 3000:3000
+  command: npm run start
+  depends_on:
+   - casino_crawler_db
+  restart: always 
+############################################################################
+ casino_client:
+  container_name: casino_client
+  build:
+   context: ./packages/casino-client
+  env_file:
+   - ./.env
+  ports:
+   - 3001:3001
+  environment:
+   - NODE_ENV=development
+  depends_on:
+   - casino_api
+  restart: always
+
+volumes:
+ pgdata:
