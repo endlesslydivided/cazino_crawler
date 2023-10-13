@@ -110,7 +110,7 @@ main()
 
 		const jsonString = JSON.stringify(result,null,2);
 
-		fs.writeFileSync('../../casinoData.json',jsonString,() =>{})
+		fs.writeFileSync('../casino-api/seed/casinoData.json',jsonString,() =>{})
 
 		process.exit(0); 
 	}) 

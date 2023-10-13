@@ -8,7 +8,7 @@ RUN npm ci
 
 COPY . .
 
-COPY ./dist ./dist
+RUN npm run build
 
 RUN apt-get update -y && apt-get install -y openssl
 

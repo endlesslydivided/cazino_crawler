@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs';
 import * as path from 'path';
 
-const seedFilePath = '../../casinoData.json';
+const seedFilePath = process.env.SEED_PATH;
 
 interface SeedItem
 {
