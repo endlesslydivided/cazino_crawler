@@ -51,7 +51,7 @@ jobs:
         username: ${{ secrets.EC2_USER_NAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        env: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_OUTPUT,AWS_DEFAULT_REGION,REGISTRY,REPOSITORY,IMAGE_TAG,API_SERVER_CONTAINER_PORT
+        allenvs: true
         script: |
           cd casino_api &&
           sudo yum install docker -y &&
@@ -100,7 +100,7 @@ jobs:
         username: ${{ secrets.EC2_USER_NAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        env: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_OUTPUT,AWS_DEFAULT_REGION,REGISTRY,REPOSITORY,IMAGE_TAG,CLIENT_SERVER_CONTAINER_PORT
+        allenvs: true
         script: |
           cd casino_client &&
           sudo yum install docker -y &&
