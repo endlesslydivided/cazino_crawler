@@ -24,7 +24,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v4 
       with:
         aws-region: eu-central-1
-        role-to-assume: arn:aws:iam::310950970630:role/AllowAccessCasinoImagesRole
+        role-to-assume: arn:aws:iam::310950970630:role/CasinoCrawlerGitActioncOIDC
         audience: sts.amazonaws.com.cn
     - name: Login to AWS ECR
       id: login-ecr
@@ -75,7 +75,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v4 
       with:
         aws-region: eu-central-1
-        role-to-assume: arn:aws:iam::310950970630:role/AllowAccessCasinoImagesRole
+        role-to-assume: arn:aws:iam::310950970630:role/CasinoCrawlerGitActioncOIDC
         audience: sts.amazonaws.com.cn
     - name: Login to AWS ECR
       id: login-ecr
