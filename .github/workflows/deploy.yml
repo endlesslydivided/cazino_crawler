@@ -13,7 +13,6 @@ env:
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
  AWS_DEFAULT_OUTPUT: json
  AWS_DEFAULT_REGION: eu-central-1
- CLEINT_SERVER_CONTAINER_PORT: 3001
 jobs:
   deploy-server-app:
     runs-on: ubuntu-latest
@@ -32,11 +31,11 @@ jobs:
     - name: Build, push docker image
       env:
         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        REPOSITORY: casino_api
+        REPOSITORY: casino-api
         IMAGE_TAG: ${{ github.sha }}
       run: |
         cd packages
-        cd casino_api
+        cd casino-api
         docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
     - name: Deploy docker image to EC2
@@ -89,7 +88,7 @@ jobs:
         NEXT_PUBLIC_API_URI: ${{ secrets.EC2_SERVER_PUBLIC_IP }}
       run: |
         cd packages
-        cd casino_client
+        cd casino-client
         docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
     - name: Deploy docker image to EC2
