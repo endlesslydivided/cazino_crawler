@@ -65,7 +65,7 @@ jobs:
           sudo docker stop $REPOSITORY || true
           sudo docker rm $REPOSITORY || true
           sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
-          sudo docker run -d --name $REPOSITORY -p 80:$API_SERVER_CONTAINER_PORT $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          sudo docker run -d --name $REPOSITORY -p 80:$API_SERVER_CONTAINER_PORT --env-file .env.production $REGISTRY/$REPOSITORY:$IMAGE_TAG
   deploy-client-app:
     runs-on: ubuntu-latest
     steps:
@@ -119,4 +119,4 @@ jobs:
           sudo docker stop $REPOSITORY || true
           sudo docker rm $REPOSITORY || true
           sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
-          sudo docker run -d --name $REPOSITORY -p 80:$CLIENT_SERVER_CONTAINER_PORT $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          sudo docker run -d --name $REPOSITORY -p 80:$CLIENT_SERVER_CONTAINER_PORT --env-file .env.production $REGISTRY/$REPOSITORY:$IMAGE_TAG
