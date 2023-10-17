@@ -8,11 +8,11 @@ RUN npm ci
 
 COPY . .
 
+RUN npm run db:client
+
 RUN npm run build
 
 RUN apt-get update -y && apt-get install -y openssl
-
-RUN npm run db:client
 
 EXPOSE 3000
 
