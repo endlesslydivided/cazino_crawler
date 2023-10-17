@@ -14,4 +14,6 @@ RUN apt-get update -y && apt-get install -y openssl
 
 RUN npm run db:client
 
+EXPOSE 3000
+
 ENTRYPOINT npm run start

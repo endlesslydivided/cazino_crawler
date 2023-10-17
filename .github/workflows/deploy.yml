@@ -1,0 +1,105 @@
+name: Deploy API dev CI
+
+on:
+  push:
+    branches: ["dev"]
+
+env:
+ AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+ AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+ AWS_DEFAULT_OUTPUT: json
+ AWS_DEFAULT_REGION: eu-center-1
+ CLEINT_SERVER_CONTAINER_PORT: 3001
+jobs:
+  deploy-server-app:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Login to AWS ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, push docker image
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: casino_api
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd packages
+        cd casino_api
+        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+        docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+    - name: Deploy docker image to EC2
+      uses: appleboy/ssh-action@v1.0.0
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: casino_api
+        IMAGE_TAG: ${{ github.sha }}
+        API_SERVER_CONTAINER_PORT: 3000
+      with:
+        host: ${{ secrets.EC2_SERVER_PUBLIC_IP }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        username: ${{ secrets.EC2_USER_NAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_OUTPUT,AWS_DEFAULT_REGION,REGISTRY,REPOSITORY,IMAGE_TAG,API_SERVER_CONTAINER_PORT
+        script: |
+          cd /casino_api &&
+          sudo yum install docker -y &&
+          sudo yum install awscli -y &&
+          sudo aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID &&
+          sudo aws configure set aws_secret_access_key  $AWS_SECRET_ACCESS_KEY &&
+          sudo aws configure set default.region $AWS_DEFAULT_REGION &&
+          sudo aws configure set default.output $AWS_DEFAULT_OUTPUT &&
+          sudo aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 310950970630.dkr.ecr.eu-central-1.amazonaws.com &&
+          sudo docker stop $REPOSITORY || true &&
+          sudo docker rm $REPOSITORY || true &&
+          sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG &&
+          sudo docker run -d --name $REPOSITORY -p 80:$API_SERVER_CONTAINER_PORT $REGISTRY/$REPOSITORY:$IMAGE_TAG
+  deploy-client-app:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Login to AWS ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - name: Build, push docker image
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: casino_client
+        IMAGE_TAG: ${{ github.sha }}
+        NEXT_SERVER_API_URI: ${{ secrets.EC2_SERVER_PUBLIC_IP }}
+        NEXT_PUBLIC_API_URI: ${{ secrets.EC2_SERVER_PUBLIC_IP }}
+      run: |
+        cd packages
+        cd casino_client
+        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+        docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+    - name: Deploy docker image to EC2
+      uses: appleboy/ssh-action@v1.0.0
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: casino_client
+        IMAGE_TAG: ${{ github.sha }}
+        CLIENT_SERVER_CONTAINER_PORT: 3001
+      with:
+        host: ${{ secrets.EC2_CLIENT_PUBLIC_IP }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        username: ${{ secrets.EC2_USER_NAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_OUTPUT,AWS_DEFAULT_REGION,REGISTRY,REPOSITORY,IMAGE_TAG,CLIENT_SERVER_CONTAINER_PORT
+        script: |
+          cd /casino_api &&
+          sudo yum install docker -y &&
+          sudo yum install awscli -y &&
+          sudo aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID &&
+          sudo aws configure set aws_secret_access_key  $AWS_SECRET_ACCESS_KEY &&
+          sudo aws configure set default.region $AWS_DEFAULT_REGION &&
+          sudo aws configure set default.output $AWS_DEFAULT_OUTPUT &&
+          sudo aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 310950970630.dkr.ecr.eu-central-1.amazonaws.com &&
+          sudo docker stop $REPOSITORY || true &&
+          sudo docker rm $REPOSITORY || true &&
+          sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG &&
+          sudo docker run -d --name $REPOSITORY -p 80:$CLIENT_SERVER_CONTAINER_PORT $REGISTRY/$REPOSITORY:$IMAGE_TAG
