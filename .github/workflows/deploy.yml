@@ -53,13 +53,17 @@ jobs:
         port: ${{ secrets.PORT }}
         envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_OUTPUT,AWS_DEFAULT_REGION,REGISTRY,REPOSITORY,IMAGE_TAG,API_SERVER_CONTAINER_PORT
         script: |
-          cd casino_api &&
-          sudo yum install docker -y &&
-          sudo yum install awscli -y &&
-          sudo aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 310950970630.dkr.ecr.eu-central-1.amazonaws.com &&
-          sudo docker stop $REPOSITORY || true &&
-          sudo docker rm $REPOSITORY || true &&
-          sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG &&
+          cd casino_api
+          sudo yum install docker -y
+          sudo yum install awscli -y
+          sudo aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          sudo aws configure set aws_secret_access_key  $AWS_SECRET_ACCESS_KEY
+          sudo aws configure set default.region $AWS_DEFAULT_REGION
+          sudo aws configure set default.output $AWS_DEFAULT_OUTPUT
+          sudo aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 310950970630.dkr.ecr.eu-central-1.amazonaws.com
+          sudo docker stop $REPOSITORY || true
+          sudo docker rm $REPOSITORY || true
+          sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
           sudo docker run -d --name $REPOSITORY -p 80:$API_SERVER_CONTAINER_PORT $REGISTRY/$REPOSITORY:$IMAGE_TAG
   deploy-client-app:
     runs-on: ubuntu-latest
@@ -102,21 +106,15 @@ jobs:
         port: ${{ secrets.PORT }}
         envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_DEFAULT_OUTPUT,AWS_DEFAULT_REGION,REGISTRY,REPOSITORY,IMAGE_TAG,CLIENT_SERVER_CONTAINER_PORT
         script: |
-          cd casino_client &&
-          sudo yum install docker -y &&
-          sudo yum install awscli -y &&
-          echo "$AWS_ACCESS_KEY_ID" &&
-          echo "$AWS_SECRET_ACCESS_KEY" &&
-          echo "$AWS_DEFAULT_REGION" &&
-          echo "$AWS_DEFAULT_OUTPUT" &&
-          echo "$CLIENT_SERVER_CONTAINER_PORT" &&
-          echo "$REPOSITORY" &&
-          sudo aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID &&
-          sudo aws configure set aws_secret_access_key  $AWS_SECRET_ACCESS_KEY &&
-          sudo aws configure set default.region $AWS_DEFAULT_REGION &&
-          sudo aws configure set default.output $AWS_DEFAULT_OUTPUT &&
-          sudo aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 310950970630.dkr.ecr.eu-central-1.amazonaws.com &&
-          sudo docker stop $REPOSITORY || true &&
-          sudo docker rm $REPOSITORY || true &&
-          sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG &&
+          cd casino_client
+          sudo yum install docker -y
+          sudo yum install awscli -y
+          sudo aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          sudo aws configure set aws_secret_access_key  $AWS_SECRET_ACCESS_KEY
+          sudo aws configure set default.region $AWS_DEFAULT_REGION
+          sudo aws configure set default.output $AWS_DEFAULT_OUTPUT
+          sudo aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 310950970630.dkr.ecr.eu-central-1.amazonaws.com
+          sudo docker stop $REPOSITORY || true
+          sudo docker rm $REPOSITORY || true
+          sudo docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
           sudo docker run -d --name $REPOSITORY -p 80:$CLIENT_SERVER_CONTAINER_PORT $REGISTRY/$REPOSITORY:$IMAGE_TAG
