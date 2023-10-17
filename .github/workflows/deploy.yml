@@ -3,30 +3,39 @@ name: Deploy API dev CI
 on:
   push:
     branches: ["dev"]
-
+    
+permissions:
+  id-token: write
+  contents: read
+  
 env:
  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
  AWS_DEFAULT_OUTPUT: json
- AWS_DEFAULT_REGION: eu-center-1
- CLEINT_SERVER_CONTAINER_PORT: 3001
+ AWS_DEFAULT_REGION: eu-central-1
 jobs:
   deploy-server-app:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-central-1
     - name: Login to AWS ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
     - name: Build, push docker image
       env:
         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        REPOSITORY: casino_api
+        REPOSITORY: casino-api
         IMAGE_TAG: ${{ github.sha }}
       run: |
         cd packages
-        cd casino_api
+        cd casino-api
         docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
     - name: Deploy docker image to EC2
@@ -61,6 +70,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-central-1
     - name: Login to AWS ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
@@ -73,7 +88,7 @@ jobs:
         NEXT_PUBLIC_API_URI: ${{ secrets.EC2_SERVER_PUBLIC_IP }}
       run: |
         cd packages
-        cd casino_client
+        cd casino-client
         docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
     - name: Deploy docker image to EC2
