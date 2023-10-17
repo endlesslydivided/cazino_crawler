@@ -25,7 +25,7 @@ jobs:
       with:
         aws-region: eu-central-1
         role-to-assume: arn:aws:iam::310950970630:role/CasinoCrawlerGitActioncOIDC
-        audience: sts.amazonaws.com.cn
+        audience: sts.amazonaws.com
     - name: Login to AWS ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
@@ -76,7 +76,7 @@ jobs:
       with:
         aws-region: eu-central-1
         role-to-assume: arn:aws:iam::310950970630:role/CasinoCrawlerGitActioncOIDC
-        audience: sts.amazonaws.com.cn
+        audience: sts.amazonaws.com
     - name: Login to AWS ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
